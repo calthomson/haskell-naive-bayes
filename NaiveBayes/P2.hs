@@ -9,8 +9,6 @@ import Data.Text (Text)
 import qualified Data.Text.Encoding as Text
 
 
-
--- "Classes" of our data
 --   1. Number of times pregnant
 --   2. Plasma glucose concentration a 2 hours in an oral glucose tolerance test
 --   3. Diastolic blood pressure (mm Hg)
@@ -33,6 +31,7 @@ import qualified Data.Text.Encoding as Text
 -- THE BELOW CODE IS FROM HERE: https://howistart.org/posts/haskell/1
 -- a simple type alias for data
 type Patient = (Int, Int, Int, Int, Int, Float, Float, Int, Int)
+
 --type mytype =  Either String (V.Vector Patient)
 main :: IO ()
 main = do
