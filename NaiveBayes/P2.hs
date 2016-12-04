@@ -58,6 +58,8 @@ main = do
         print (fst classProbs)
         putStrLn "Chance of Negalegglar for Diabetus"
         print (snd classProbs)
+        let pred = predict summaries (head test)
+        putStrLn pred
 
 
 -- changes a vector of tuples into a list of lists. [T1..] -> [L1..] with Li having the same values as Ti
@@ -111,8 +113,9 @@ calcProb val mean stdev = do
 calcExp :: Float-> Float -> Float -> Float
 calcExp val mean stdev = exp ( - (((val - mean) ** 2) / (2 * (stdev **  2))))
 
--- Calculate Class Probabilities --
--- Combine the probabilities of all the attribute values
+-- Calculate Class Probabilities for One Data Instance (Patient) --
+-- Combine the probabilities of all the attribute values for a patient to find the liklihood of that patient
+-- being positive or negative for diabese
 -- Input: 
 --     summaries: A tuple of 2 lists (negative & positive, each containing 8 tuples (attributes) of mean & stdev
 --     inputVector: The testing data, as a list of tuples of 8 Floats: [(Float, Float, Float, Float, Float, Float, Float, Float, Float)]
@@ -125,3 +128,14 @@ calcClassProb summaries inputVector = do
   let goodPreds = [ f v1 v2 | (f,(v1,v2)) <- goodvals]
   let badPreds = [f v1 v2 | (f,(v1,v2)) <- badvals]
   ((product goodPreds),(product badPreds))
+
+greaterProb (x, y)
+  | x > y = "Patient is positive for diabetes"
+  | otherwise = "Patient is negative for diabetes"
+
+-- Look for the largest probability of a data instance (a patient) belonging to a class (positive or negative for diabetese)
+-- Output: Class with highest probability
+predict :: ([(Float,Float)], [(Float,Float)]) -> [Float] -> String
+predict summaries inputVector = do
+  let probabilities = calcClassProb summaries inputVector
+  greaterProb probabilities
