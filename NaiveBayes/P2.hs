@@ -40,11 +40,21 @@ main = do
   case decode NoHeader csvData of
     Left err -> putStrLn err
     Right v -> do
-        let sep = (separateByClass v)
+        let (testVector, train) = V.splitAt (div (V.length v) 3) v
+        let test = processTestingData testVector
+        let sep = (separateByClass train)
         let summaries = summarizeTuple sep 
-        print summaries
+        putStrLn "Number of testing rows"
+        print (length (test))
+        putStrLn "Number of training rows"
+        print (length (train))
     
   
+
+-- changes a vector of tuples into a list of lists. [T1..] -> [L1..] with Li having the same values as Ti
+-- Note that this will keep the final 'class marker' variable, used for checking accuracy of predictions later on
+processTestingData :: (V.Vector Patient) -> [[Float]]
+processTestingData v = V.toList(V.map (\(pregnancies, plasmaGlucose, bloodPressure, tricepFolds, serumInsulin, bmi, diabetesPedigree, age, diabetes)-> pregnancies:plasmaGlucose:bloodPressure: tricepFolds:serumInsulin:bmi:diabetesPedigree:age:diabetes:[]) v)
 
 -- Partitions vector a tuple of two vectors, one containing all diabetes positive cases, the other with the negatives
 separateByClass :: (V.Vector Patient) -> ((V.Vector Patient), (V.Vector Patient))
