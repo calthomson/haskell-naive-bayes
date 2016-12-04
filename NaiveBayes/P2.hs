@@ -19,18 +19,6 @@ import qualified Data.Text.Encoding as Text
 --   8. Age (years)
 --   9. Class variable (0 or 1)
 
--- Original attempt at reading in file
--- loadCsv :: IO ()
--- loadCsv = do
---   csvData <- BL.readFile "data.csv"
---   case decode NoHeader csvData of
---       Left err -> putStrLn err
---       Right V.forM_ v $ \ (pregnancies, plasmaGlucose, bloodPressure, tricepFolds, serumInsulin, bmi, diabetesPedigree, age, diabetic) ->
- --           putStrLn $ pregnancies ++ ", " ++ plasmaGlucose ++ ", " ++ bloodPressure ++ ", " ++ tricepFolds ++ ", " ++ serumInsulin ++ ", " ++ bmi ++ ", " ++ diabetesPedigree ++ ", " ++ age ++ ", " ++ diabetic
-
--- THE BELOW CODE IS FROM HERE: https://howistart.org/posts/haskell/1
--- a simple type alias for data
---type Patient = (Int, Int, Int, Int, Int, Float, Float, Int, Int)
 type Patient = (Float, Float, Float, Float, Float, Float, Float, Float, Float)
 
 --type mytype =  Either String (V.Vector Patient)
@@ -43,11 +31,6 @@ main = do
         let (testVector, train) = V.splitAt (div (V.length v) 3) v
         let test = processTestingData testVector
         let sep = (separateByClass train)
-        -- Calculate mean and standard deviation of each attribute
-        -- summaries is a ([(Float,Float)], [(Float,Float)]), 2 lists of 8 2-tuples (mean, stdev).
-        -- One list is for POSITIVE, the other for NEGATIVE
-        -- summaries will be:
-        --([(4.8656716,3.7412379),(141.25746,31.939623),(70.82462,21.49181),(22.164179,17.679703),(100.33582,138.68918),(35.142532,7.262968),(0.5504999,0.37235445),(37.067165,10.968255)],[(3.298,3.0171828),(109.98,26.141197),(68.184,18.063078),(19.664,14.889947),(68.792,98.86524),(30.304186,7.6898556),(0.42973423,0.29908526),(31.19,11.667651)])
         let summaries = summarizeTuple sep 
         putStrLn "Number of testing rows"
         print (length (test))
@@ -59,7 +42,9 @@ main = do
         putStrLn "Chance of Negalegglar for Diabetus"
         print (snd classProbs)
         let pred = predict summaries (head test)
-        putStrLn pred
+        print pred
+        let allPred = getPredictions summaries test
+        print allPred
 
 
 -- changes a vector of tuples into a list of lists. [T1..] -> [L1..] with Li having the same values as Ti
@@ -72,7 +57,6 @@ separateByClass :: (V.Vector Patient) -> ((V.Vector Patient), (V.Vector Patient)
 separateByClass vec = (V.partition (\(_,_,_,_,_,_,_,_,x) -> x==1) vec) 
 
 -- Summarizes the diabetes positive and negative vectors
--- summarizeByClass
 summarizeTuple :: ((V.Vector Patient), (V.Vector Patient)) -> ([(Float,Float)], [(Float,Float)])
 summarizeTuple (v1, v2) = (summarize v1, summarize v2) 
 
@@ -129,13 +113,21 @@ calcClassProb summaries inputVector = do
   let badPreds = [f v1 v2 | (f,(v1,v2)) <- badvals]
   ((product goodPreds),(product badPreds))
 
-greaterProb (x, y)
-  | x > y = "Patient is positive for diabetes"
-  | otherwise = "Patient is negative for diabetes"
+-- Predict Class --
+-- Predict probabilities of instance belonging to either class, then return class with highest probability
+predict :: ([(Float,Float)], [(Float,Float)]) -> [Float] -> Float
+predict summaries inputVector
+  | x > y = 1
+  | otherwise = 0
+  where
+    probabilities = calcClassProb summaries inputVector
+    x = (fst probabilities)
+    y = (snd probabilities)
 
--- Look for the largest probability of a data instance (a patient) belonging to a class (positive or negative for diabetese)
--- Output: Class with highest probability
-predict :: ([(Float,Float)], [(Float,Float)]) -> [Float] -> String
-predict summaries inputVector = do
-  let probabilities = calcClassProb summaries inputVector
-  greaterProb probabilities
+-- Predict Every Instance in Test Data --
+-- Predict class for every instance in test data
+-- Output: List of result for each instance, 0 for negative prediction, 1 for positive prediction
+getPredictions :: ([(Float,Float)], [(Float,Float)]) -> [[Float]] -> [Float]
+getPredictions summaries testData = do
+  let predictions = [predict summaries x | x <- testData]
+  predictions
