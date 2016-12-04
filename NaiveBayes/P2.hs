@@ -31,21 +31,28 @@ main = do
         let (testVector, train) = V.splitAt (div (V.length v) 3) v
         let test = processTestingData testVector
         let sep = (separateByClass train)
+        putStrLn "Summarizing training data"
         let summaries = summarizeTuple sep 
         putStrLn "Number of testing rows"
         print (length (test))
         putStrLn "Number of training rows"
         print (length (train))    
+        putStrLn "Calculating example probability"
         let classProbs = calcClassProb summaries (head test)
-        putStrLn "Chance of Positoodle for Diabetus"
+        putStrLn "Chance of Positive for Diabetes:"
         print (fst classProbs)
-        putStrLn "Chance of Negalegglar for Diabetus"
+        putStrLn "Chance of Negative for Diabetes:"
         print (snd classProbs)
         let pred = predict summaries (head test)
+        putStrLn "Test prediction:"
         print pred
+        putStrLn "Calculating all predictions"
         let allPred = getPredictions summaries test
-        print allPred
-
+        putStrLn "First 10 predictions"
+        print (take 10 allPred)
+        putStrLn "We were"
+        print (getAccuracy allPred test)
+        putStrLn "percent accurate"
 
 -- changes a vector of tuples into a list of lists. [T1..] -> [L1..] with Li having the same values as Ti
 -- Note that this will keep the final 'class marker' variable, used for checking accuracy of predictions later on
@@ -131,3 +138,11 @@ getPredictions :: ([(Float,Float)], [(Float,Float)]) -> [[Float]] -> [Float]
 getPredictions summaries testData = do
   let predictions = [predict summaries x | x <- testData]
   predictions
+
+
+-- Find the accuracy of the predictions. 
+getAccuracy :: [Float] -> [[Float]]-> Float
+getAccuracy predictions test = 
+    let 
+        correct = foldr (\(p, t)-> \i-> (if p == (last t) then (i+1) else i) ) 0 (zip predictions test)
+    in (fromIntegral(correct)/ fromIntegral(length test))*100
